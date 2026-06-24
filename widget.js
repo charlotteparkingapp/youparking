@@ -294,12 +294,49 @@
       .then(function(r){return r.json();})
       .then(function(data){
         if(data.ok){
-          form.reset();
-          document.getElementById("yp-preventivo").style.display="none";
-          document.getElementById("yp-codice").textContent=data.codice;
-          document.getElementById("yp-codebox").style.display="block";
-          document.getElementById("yp-ok").style.display="none";
-          document.getElementById("yp-err").style.display="none";
+          // Costruisci pagina di conferma
+          var arrivo  = form["data_arrivo"].value + " " + getTimeValue("yp-arr");
+          var partenza = form["data_partenza"].value + " " + getTimeValue("yp-par");
+          var prev = document.getElementById("yp-prev-importo").textContent || "";
+          var det  = document.getElementById("yp-prev-dettaglio").textContent || "";
+          var conf = [
+            "<div style=\"background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:20px;margin-top:12px\">",
+            "<div style=\"font-size:13px;font-weight:700;color:#15803d;letter-spacing:.5px;margin-bottom:12px\">PRENOTAZIONE CONFERMATA</div>",
+            "<div style=\"font-size:32px;font-weight:700;color:#15803d;margin-bottom:4px\">&#10003;</div>",
+            "<div style=\"background:#fff;border-radius:8px;padding:14px;margin:12px 0;font-size:13px;line-height:2\">",
+            "<b>Codice:</b> <span style=\"font-family:monospace;font-size:15px;letter-spacing:2px;color:#4f46e5\">" + data.codice + "</span><br>",
+            "<b>Garage:</b> " + form["garage"].value + "<br>",
+            "<b>Cliente:</b> " + form["nome_cognome"].value + "<br>",
+            "<b>Telefono:</b> " + form["telefono"].value + "<br>",
+            (form["email"].value ? "<b>Email:</b> " + form["email"].value + "<br>" : ""),
+            "<b>Veicolo:</b> " + (L.veicoli.find(function(v){return v.key===form["tipo_veicolo"].value;})||{label:form["tipo_veicolo"].value}).label + "<br>",
+            "<b>Arrivo:</b> " + arrivo + "<br>",
+            "<b>Partenza:</b> " + partenza + "<br>",
+            (prev ? "<b>Preventivo:</b> " + prev + (det ? " <small style=\"color:#666\">(" + det + ")</small>" : "") + "<br>" : ""),
+            "</div>",
+            "<div style=\"background:#dcfce7;border-radius:8px;padding:12px;font-size:12px;color:#166534;line-height:1.6\">",
+            "<b>Conserva il codice " + data.codice + "</b><br>",
+            "Servira per cancellare la prenotazione se necessario.<br>",
+            "Il pagamento avviene direttamente in garage.",
+            "</div>",
+            "</div>"
+          ].join("");
+          form.style.display="none";
+          var confDiv = document.createElement("div");
+          confDiv.innerHTML = conf;
+          var nuovaBtn = document.createElement("button");
+          nuovaBtn.textContent = "Nuova prenotazione";
+          nuovaBtn.className = "btn-book";
+          nuovaBtn.style.cssText = "width:100%;padding:11px;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:12px;background:#4f46e5;color:#fff";
+          nuovaBtn.onclick = function() {
+            form.reset();
+            form.style.display="block";
+            confDiv.remove();
+            nuovaBtn.remove();
+            document.getElementById("yp-preventivo").style.display="none";
+          };
+          form.parentNode.insertBefore(confDiv, form.nextSibling);
+          form.parentNode.insertBefore(nuovaBtn, confDiv.nextSibling);
         } else { showMsg("yp-err",data.error||"Errore. Riprova."); }
       })
       .catch(function(){showMsg("yp-err","Errore di rete. Riprova.");})
