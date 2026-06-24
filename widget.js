@@ -6,7 +6,7 @@
   var LANG  = currentScript.getAttribute("data-lang") || "it";
   var GAS_URL = "https://script.google.com/macros/s/AKfycbwWxXiYBfNI6Ew7_0p4UQGR0fzY8eoXerSZsllIqzIWmGJBna1RgznwCva8Ufv4XZTN3A/exec";
 
-  if (!TOKEN) { console.error("[YouParking] data-key mancante."); return; }
+  if (!TOKEN) { console.error("[Charlotte Reservations] data-key mancante."); return; }
 
   var L = {
     tab_new:"Nuova prenotazione", tab_cancel:"Cancella prenotazione",
@@ -158,7 +158,7 @@
       "      <div id='yp-cerr' class='yp-msg yp-err'></div>",
       "    </form>",
       "  </div>",
-      "  <p class='yp-powered'>Powered by <a href='https://charlotteparkingapp.github.io/youparking' target='_blank'>YouParking</a> · <a href='https://charlottesystems.github.io/charlotte-commercial' target='_blank'>Charlotte</a></p>",
+      "  <p class='yp-powered'>Powered by <a href='https://charlotteparkingapp.github.io/charlotte-reservations' target='_blank'>Charlotte Reservations</a> · <a href='https://charlottesystems.github.io/charlotte-commercial' target='_blank'>Charlotte</a></p>",
       "</div>",
     ].join("\n");
   }
@@ -372,9 +372,9 @@
       .then(function(r){return r.json();})
       .then(function(data){
         if(data.ok&&data.garages&&data.garages.length>0) mount(data.garages,container);
-        else container.innerHTML="<p style='color:red;font-size:13px'>[YouParking] Configurazione non trovata.</p>";
+        else container.innerHTML="<p style='color:red;font-size:13px'>[Charlotte Reservations] Configurazione non trovata.</p>";
       })
-      .catch(function(){container.innerHTML="<p style='color:red;font-size:13px'>[YouParking] Impossibile caricare il form.</p>";});
+      .catch(function(){container.innerHTML="<p style='color:red;font-size:13px'>[Charlotte Reservations] Impossibile caricare il form.</p>";});
   }
 
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",init);
