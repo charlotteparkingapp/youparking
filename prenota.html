@@ -467,11 +467,13 @@ function showError(msg){
   document.getElementById("stato-box").innerHTML="<div class='icon'>❌</div><div>"+msg+"</div>";
 }
 
-// Init
-var slug = getSlug();
-if (!slug) {
-  showError("Pagina non trovata. Controlla il link.");
-} else {
+// Init — aspetta che il DOM sia pronto
+function init() {
+  var slug = getSlug();
+  if (!slug) {
+    showError("Pagina non trovata. Controlla il link.");
+    return;
+  }
   sbGet("clienti?slug=eq." + encodeURIComponent(slug) + "&select=*")
   .then(function(rows) {
     if (!rows || rows.length === 0) {
@@ -489,8 +491,14 @@ if (!slug) {
     mountForm(garages);
   })
   .catch(function(err){
-    if (err !== "no_cliente") showError("Errore caricamento: " + (err ? err.toString() : "sconosciuto"));
+    if (err !== "no_cliente") showError("Errore: " + (err ? err.toString() : "sconosciuto"));
   });
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
 }
 </script>
 </body>
