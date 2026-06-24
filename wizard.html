@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YouParking — Setup guidato</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f5f5f7;color:#111;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#fff;border-radius:16px;padding:40px;max-width:540px;width:100%;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.logo{font-size:22px;font-weight:700;color:#4f46e5;margin-bottom:32px;display:flex;align-items:center;gap:8px}
+.logo span{font-weight:400;color:#888;font-size:14px}
+
+/* steps indicator */
+.steps{display:flex;gap:0;margin-bottom:36px}
+.step-item{flex:1;text-align:center;position:relative}
+.step-item:not(:last-child)::after{content:'';position:absolute;top:14px;left:50%;right:-50%;height:2px;background:#e5e5e5;z-index:0}
+.step-item:not(:last-child).done::after{background:#4f46e5}
+.step-dot{width:28px;height:28px;border-radius:50%;border:2px solid #e5e5e5;background:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:12px;font-weight:600;color:#999;position:relative;z-index:1}
+.step-item.active .step-dot{border-color:#4f46e5;background:#4f46e5;color:#fff}
+.step-item.done .step-dot{border-color:#4f46e5;background:#4f46e5;color:#fff}
+.step-label{font-size:11px;color:#999}
+.step-item.active .step-label{color:#4f46e5;font-weight:600}
+
+/* panels */
+.panel{display:none}
+.panel.active{display:block}
+h2{font-size:20px;font-weight:600;margin-bottom:8px}
+.subtitle{color:#666;font-size:14px;margin-bottom:24px;line-height:1.5}
+.field{margin-bottom:16px}
+label{display:block;font-size:13px;font-weight:500;color:#444;margin-bottom:5px}
+input,select{width:100%;padding:10px 13px;border:1px solid #d0d0d0;border-radius:8px;font-size:14px;color:#111;background:#fff}
+input:focus,select:focus{outline:none;border-color:#4f46e5;box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.hint{font-size:12px;color:#888;margin-top:4px}
+code{background:#f0f0f5;padding:2px 6px;border-radius:4px;font-size:12px;color:#4f46e5}
+
+/* garage list */
+.garage-list{margin-bottom:16px}
+.garage-row{background:#f8f8fb;border:1px solid #e5e5e5;border-radius:10px;padding:14px 16px;margin-bottom:10px;position:relative}
+.garage-row h4{font-size:14px;font-weight:600;margin-bottom:10px}
+.garage-row .remove{position:absolute;top:12px;right:14px;background:none;border:none;color:#ccc;font-size:18px;cursor:pointer;line-height:1}
+.garage-row .remove:hover{color:#e53e3e}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.overflow-toggle{margin-top:10px}
+.overflow-toggle label{display:flex;align-items:center;gap:8px;font-size:13px;color:#555;font-weight:400;cursor:pointer}
+.overflow-fields{margin-top:10px;display:none}
+.overflow-fields.show{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* buttons */
+.actions{display:flex;gap:10px;margin-top:28px}
+.btn{flex:1;padding:11px;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;transition:background .15s}
+.btn-primary{background:#4f46e5;color:#fff}
+.btn-primary:hover{background:#4338ca}
+.btn-secondary{background:#f0f0f5;color:#444}
+.btn-secondary:hover{background:#e5e5ea}
+.btn-add{width:100%;padding:10px;border:2px dashed #d0d0d0;border-radius:8px;background:none;color:#666;font-size:14px;cursor:pointer;margin-bottom:16px;transition:all .15s}
+.btn-add:hover{border-color:#4f46e5;color:#4f46e5}
+
+/* snippet box */
+.snippet-box{background:#1e1e2e;border-radius:10px;padding:16px 20px;margin:16px 0}
+.snippet-box pre{color:#a9b1d6;font-size:13px;white-space:pre-wrap;word-break:break-all;line-height:1.6}
+.copy-btn{margin-top:10px;padding:8px 14px;background:#4f46e5;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer}
+.copy-btn:hover{background:#4338ca}
+
+/* success */
+.success-icon{font-size:48px;text-align:center;margin-bottom:16px}
+.feature-list{list-style:none;margin:16px 0}
+.feature-list li{padding:6px 0;font-size:14px;color:#444;display:flex;align-items:center;gap:8px}
+.feature-list li::before{content:'✓';color:#4f46e5;font-weight:700}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">YouParking <span>Setup guidato</span></div>
+
+  <!-- Steps indicator -->
+  <div class="steps" id="steps-bar">
+    <div class="step-item active" id="s1"><div class="step-dot">1</div><div class="step-label">Azienda</div></div>
+    <div class="step-item" id="s2"><div class="step-dot">2</div><div class="step-label">Telegram</div></div>
+    <div class="step-item" id="s3"><div class="step-dot">3</div><div class="step-label">Garages</div></div>
+    <div class="step-item" id="s4"><div class="step-dot">4</div><div class="step-label">Snippet</div></div>
+  </div>
+
+  <!-- STEP 1: Azienda -->
+  <div class="panel active" id="panel-1">
+    <h2>La tua azienda</h2>
+    <p class="subtitle">Inserisci i dati principali. Sono visibili solo a te nel sistema.</p>
+    <div class="field">
+      <label>Nome azienda *</label>
+      <input type="text" id="nome_azienda" placeholder="Es. Parcheggio Roma Centro SRL">
+    </div>
+    <div class="field">
+      <label>Email proprietario *</label>
+      <input type="email" id="email_proprietario" placeholder="info@tuoparking.it">
+      <p class="hint">Riceverai qui le comunicazioni di sistema.</p>
+    </div>
+    <div class="field">
+      <label>Piano</label>
+      <select id="piano">
+        <option value="base">Base — 29€/mese (fino a 1 garage)</option>
+        <option value="pro">Pro — 59€/mese (fino a 5 garages)</option>
+      </select>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="goTo(2)">Continua →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: Telegram bot -->
+  <div class="panel" id="panel-2">
+    <h2>Il tuo bot Telegram</h2>
+    <p class="subtitle">YouParking usa un bot Telegram per inviare le notifiche ai tuoi garages. Segui questi 3 passi per crearlo.</p>
+    <div class="field">
+      <label>Passo 1 — Apri @BotFather su Telegram</label>
+      <p class="hint">Cerca <code>@BotFather</code> su Telegram e invia il comando <code>/newbot</code></p>
+    </div>
+    <div class="field">
+      <label>Passo 2 — Assegna un nome al bot</label>
+      <p class="hint">Es. <code>ParcheggioCentro_bot</code>. BotFather ti darà un token API.</p>
+    </div>
+    <div class="field">
+      <label>Passo 3 — Incolla qui il token *</label>
+      <input type="text" id="bot_token" placeholder="123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw">
+      <p class="hint">Il token è nel formato <code>numeri:lettere</code>. Non condividerlo con nessuno.</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="goTo(1)">← Indietro</button>
+      <button class="btn btn-primary" onclick="goTo(3)">Continua →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Garages -->
+  <div class="panel" id="panel-3">
+    <h2>I tuoi garages</h2>
+    <p class="subtitle">Aggiungi ogni garage. Per ogni garage ti serve il Chat ID del gruppo Telegram corrispondente. <a href="https://t.me/getmyid_bot" target="_blank">Come trovarlo →</a></p>
+    <div class="garage-list" id="garage-list"></div>
+    <button class="btn-add" onclick="addGarage()">+ Aggiungi garage</button>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="goTo(2)">← Indietro</button>
+      <button class="btn btn-primary" onclick="goTo(4)">Continua →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: Snippet -->
+  <div class="panel" id="panel-4">
+    <h2>Tutto pronto!</h2>
+    <p class="subtitle">Incolla questo codice nel tuo sito dove vuoi che appaia il form di prenotazione.</p>
+    <div class="snippet-box">
+      <pre id="snippet-code"></pre>
+    </div>
+    <button class="copy-btn" onclick="copySnippet()">Copia codice</button>
+    <br><br>
+    <p class="subtitle">Il form si caricherà automaticamente con i tuoi garages configurati.</p>
+    <ul class="feature-list">
+      <li>Le prenotazioni arrivano subito su Telegram</li>
+      <li>Funziona su qualsiasi sito web</li>
+      <li>Supporta italiano e inglese (<code>data-lang="en"</code>)</li>
+    </ul>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="goTo(3)">← Modifica garages</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var state = {
+  nome_azienda: "", email: "", piano: "base",
+  bot_token: "", garages: [], token: null,
+};
+var garageCount = 0;
+
+function goTo(step) {
+  if (step === 2) {
+    state.nome_azienda = document.getElementById("nome_azienda").value.trim();
+    state.email = document.getElementById("email_proprietario").value.trim();
+    state.piano = document.getElementById("piano").value;
+    if (!state.nome_azienda || !state.email) { alert("Compila tutti i campi obbligatori."); return; }
+  }
+  if (step === 3) {
+    state.bot_token = document.getElementById("bot_token").value.trim();
+    if (!state.bot_token) { alert("Inserisci il token del bot Telegram."); return; }
+  }
+  if (step === 4) {
+    state.garages = collectGarages();
+    if (state.garages.length === 0) { alert("Aggiungi almeno un garage."); return; }
+    var invalid = state.garages.find(function(g) { return !g.nome || !g.chat_id; });
+    if (invalid) { alert("Ogni garage deve avere nome e Chat ID."); return; }
+    buildSnippet();
+  }
+
+  for (var i = 1; i <= 4; i++) {
+    document.getElementById("panel-" + i).classList.remove("active");
+    var si = document.getElementById("s" + i);
+    si.classList.remove("active","done");
+    if (i < step) si.classList.add("done");
+    if (i === step) si.classList.add("active");
+  }
+  document.getElementById("panel-" + step).classList.add("active");
+}
+
+function addGarage() {
+  garageCount++;
+  var idx = garageCount;
+  var div = document.createElement("div");
+  div.className = "garage-row";
+  div.id = "garage-" + idx;
+  div.innerHTML = [
+    "<h4>Garage " + idx + "</h4>",
+    "<button class='remove' onclick=\"removeGarage(" + idx + ")\">×</button>",
+    "<div class='field'><label>Nome del garage *</label>",
+    "<input type='text' class='g-nome' placeholder='Es. Garage Centro'></div>",
+    "<div class='row2'>",
+    "  <div class='field'><label>Chat ID Telegram *</label>",
+    "    <input type='text' class='g-chatid' placeholder='-1001234567890'></div>",
+    "  <div class='field'><label>Orario chiusura</label>",
+    "    <input type='time' class='g-chiusura'></div>",
+    "</div>",
+    "<div class='overflow-toggle'>",
+    "  <label><input type='checkbox' class='g-overflow-check' onchange=\"toggleOverflow(this," + idx + ")\"> Notifica un altro garage se arrivo fuori orario</label>",
+    "</div>",
+    "<div class='overflow-fields' id='overflow-" + idx + "'>",
+    "  <div class='field'><label>Chat ID di destinazione</label>",
+    "    <input type='text' class='g-overflow-id' placeholder='-1009876543210'></div>",
+    "  <div class='field'><label>Dopo le ore</label>",
+    "    <input type='time' class='g-overflow-ora'></div>",
+    "</div>",
+  ].join("");
+  document.getElementById("garage-list").appendChild(div);
+}
+
+function toggleOverflow(checkbox, idx) {
+  var fields = document.getElementById("overflow-" + idx);
+  if (checkbox.checked) fields.classList.add("show");
+  else fields.classList.remove("show");
+}
+
+function removeGarage(idx) {
+  var el = document.getElementById("garage-" + idx);
+  if (el) el.remove();
+}
+
+function collectGarages() {
+  var rows = document.querySelectorAll(".garage-row");
+  var result = [];
+  rows.forEach(function(row) {
+    var overflowCheck = row.querySelector(".g-overflow-check");
+    result.push({
+      nome:            row.querySelector(".g-nome").value.trim(),
+      chat_id:         row.querySelector(".g-chatid").value.trim(),
+      orario_chiusura: row.querySelector(".g-chiusura").value || "",
+      overflow_chat_id: overflowCheck && overflowCheck.checked ? row.querySelector(".g-overflow-id").value.trim() : "",
+      overflow_ora:    overflowCheck && overflowCheck.checked ? row.querySelector(".g-overflow-ora").value : "",
+    });
+  });
+  return result;
+}
+
+function buildSnippet() {
+  var token = "ypk_" + Math.random().toString(36).substr(2, 16);
+  state.token = token;
+  var snippet = '<script src="https://charlottesystems.github.io/youparking/widget.js"\n        data-key="' + token + '"><\/script>';
+  document.getElementById("snippet-code").textContent = snippet;
+}
+
+function copySnippet() {
+  var text = document.getElementById("snippet-code").textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    var btn = document.querySelector(".copy-btn");
+    btn.textContent = "Copiato!";
+    setTimeout(function() { btn.textContent = "Copia codice"; }, 2000);
+  });
+}
+
+// Aggiungi un garage di default all'apertura
+addGarage();
+</script>
+</body>
+</html>
