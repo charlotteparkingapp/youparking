@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>YouParking — Setup guidato</title>
+<title>Charlotte Reservations — Setup guidato</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:#f5f5f7;color:#111;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:20px}
@@ -71,7 +71,7 @@ code{background:#f0f0f5;padding:2px 6px;border-radius:4px;font-size:12px;color:#
   <svg width="260" height="52" viewBox="0 0 260 52" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="44" height="44" rx="10" fill="#4f46e5" y="4"/>
     <text x="22" y="30" text-anchor="middle" font-family="system-ui,sans-serif" font-size="22" font-weight="700" fill="white">P</text>
-    <text x="54" y="28" font-family="system-ui,sans-serif" font-size="20" font-weight="700" fill="#4f46e5">YouParking</text>
+    <text x="54" y="28" font-family="system-ui,sans-serif" font-size="20" font-weight="700" fill="#4f46e5">Charlotte Reservations</text>
     <text x="54" y="44" font-family="system-ui,sans-serif" font-size="11" font-weight="500" fill="#888" letter-spacing="2">RESERVATIONS</text>
     <circle cx="240" cy="14" r="5" fill="#4f46e5" opacity="0.3"/>
     <circle cx="252" cy="14" r="5" fill="#4f46e5" opacity="0.6"/>
@@ -97,7 +97,7 @@ code{background:#f0f0f5;padding:2px 6px;border-radius:4px;font-size:12px;color:#
   <!-- STEP 2 -->
   <div class="panel" id="panel-2">
     <h2>Il tuo bot Telegram</h2>
-    <p class="subtitle">YouParking usa un bot Telegram per inviare le notifiche. Segui questi passi.</p>
+    <p class="subtitle">Charlotte Reservations usa un bot Telegram per inviare le notifiche. Segui questi passi.</p>
     <div class="info-box">
       <strong>Come creare il bot:</strong>
       1. Apri Telegram e cerca <code>@BotFather</code><br>
@@ -432,7 +432,7 @@ function goTo(step) {
 function buildSnippet(token, slug) {
   state.token = token;
   state.slug = slug;
-  var bookingUrl = "https://charlotteparkingapp.github.io/youparking/booking.html#" + slug;
+  var bookingUrl = "https://charlotteparkingapp.github.io/charlotte-reservations/booking.html#" + slug;
   var snippet = bookingUrl;
   document.getElementById("snippet-code").textContent = snippet;
 }
