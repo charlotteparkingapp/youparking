@@ -60,7 +60,7 @@ body{font-family:system-ui,sans-serif;background:#f5f5f7;color:#111;min-height:1
     <div id="form-container" style="display:none"></div>
   </div>
   <p class="yp-powered" style="margin-top:16px">
-    Powered by <a href="https://charlotteparkingapp.github.io/youparking" target="_blank">YouParking</a> ·
+    Powered by <a href="https://charlotteparkingapp.github.io/charlotte-reservations" target="_blank">Charlotte Reservations</a> ·
     <a href="https://charlottesystems.github.io/charlotte-commercial" target="_blank">Charlotte</a>
   </p>
 </div>
@@ -227,7 +227,7 @@ function sendTelegram(botToken, chatId, text) {
 
 function buildTelegramMsg(booking) {
   var lines = [
-    "🌐 <b>Nuova prenotazione YouParking</b>",
+    "🌐 <b>Nuova prenotazione Charlotte Reservations</b>",
     "",
     "🏢 <b>Garage:</b> " + (booking.garage_nome || "—"),
     "🔑 <b>Codice:</b> <code>" + booking.codice + "</code>",
