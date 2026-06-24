@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prenota il tuo posto</title>
+<meta name="description" content="Prenota online il tuo posto auto. Conferma immediata su Telegram.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--purple:#4f46e5;--purple-dark:#4338ca}
+body{font-family:system-ui,sans-serif;background:#f5f5f7;color:#111;min-height:100vh}
+
+/* HEADER GARAGE */
+.garage-header{background:var(--purple);color:#fff;padding:32px 20px;text-align:center}
+.garage-logo{font-size:36px;font-weight:700;margin-bottom:6px;letter-spacing:-0.5px}
+.garage-sub{font-size:15px;opacity:.8}
+
+/* WIDGET CONTAINER */
+.widget-wrap{max-width:520px;margin:0 auto;padding:24px 16px 40px}
+.widget-card{background:#fff;border-radius:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:8px}
+
+/* LOADING / ERROR */
+.state-box{text-align:center;padding:60px 20px;color:#888;font-size:15px}
+.state-box .icon{font-size:40px;margin-bottom:12px}
+
+/* FORM STYLES (duplicate del widget inline per pagina standalone) */
+.yp-widget{font-family:system-ui,sans-serif;max-width:100%;padding:20px;box-sizing:border-box}
+.yp-tabs{display:flex;border-bottom:2px solid #e5e5e5;margin-bottom:24px}
+.yp-tab{flex:1;padding:10px;text-align:center;font-size:14px;font-weight:600;color:#888;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
+.yp-tab.active{color:var(--purple);border-bottom-color:var(--purple)}
+.yp-panel{display:none}.yp-panel.active{display:block}
+.yp-field{margin-bottom:14px}
+.yp-widget label{display:block;font-size:13px;font-weight:500;color:#444;margin-bottom:5px}
+.yp-widget input,.yp-widget select,.yp-widget textarea{width:100%;padding:9px 12px;border:1px solid #d0d0d0;border-radius:8px;font-size:14px;box-sizing:border-box;color:#111;background:#fff}
+.yp-widget input:focus,.yp-widget select:focus,.yp-widget textarea:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.yp-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.yp-time{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.yp-widget textarea{resize:vertical;min-height:72px}
+.yp-widget button{width:100%;padding:11px;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;transition:background .15s}
+.btn-book{background:var(--purple);color:#fff}.btn-book:hover{background:var(--purple-dark)}
+.btn-cancel{background:#dc2626;color:#fff}.btn-cancel:hover{background:#b91c1c}
+.yp-widget button:disabled{background:#a5a5a5;cursor:not-allowed}
+.yp-msg{padding:12px 16px;border-radius:8px;font-size:14px;margin-top:12px;display:none}
+.yp-ok{background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7}
+.yp-err{background:#fef2f2;color:#991b1b;border:1px solid #fca5a5}
+.yp-preventivo{background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 16px;margin-top:14px;display:none}
+.yp-preventivo-title{font-size:12px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.yp-preventivo-importo{font-size:28px;font-weight:700;color:#15803d;margin-bottom:2px}
+.yp-preventivo-dettaglio{font-size:12px;color:#166534;margin-bottom:4px}
+.yp-preventivo-note{font-size:11px;color:#4ade80}
+.yp-code-box{background:#f0f4ff;border:1px solid #c7d2fe;border-radius:8px;padding:14px 16px;margin-top:14px;font-size:14px;color:#3730a3;text-align:center;display:none}
+.yp-code-box strong{display:block;font-size:22px;letter-spacing:3px;margin:6px 0}
+.yp-powered{font-size:11px;text-align:center;color:#aaa;margin-top:20px;padding-top:16px;border-top:1px solid #f0f0f0}
+.yp-powered a{color:#aaa;text-decoration:none}.yp-powered a:hover{color:#666}
+</style>
+</head>
+<body>
+
+<div class="garage-header">
+  <div class="garage-logo" id="garage-nome">Caricamento...</div>
+  <div class="garage-sub" id="garage-sub">Prenota il tuo posto auto online</div>
+</div>
+
+<div class="widget-wrap">
+  <div class="widget-card">
+    <div id="stato-box" class="state-box">
+      <div class="icon">⏳</div>
+      <div>Caricamento in corso...</div>
+    </div>
+    <div id="form-container" style="display:none"></div>
+  </div>
+  <p class="yp-powered" style="text-align:center;margin-top:16px;font-size:12px;color:#aaa">
+    Powered by <a href="https://charlotteparkingapp.github.io/youparking" target="_blank">YouParking</a> · 
+    <a href="https://charlottesystems.github.io/charlotte-commercial" target="_blank">Charlotte</a>
+  </p>
+</div>
+
+<script>
+var GAS_URL = "https://script.google.com/macros/s/AKfycbwWxXiYBfNI6Ew7_0p4UQGR0fzY8eoXerSZsllIqzIWmGJBna1RgznwCva8Ufv4XZTN3A/exec";
+
+var VEICOLI = [
+  {key:"moto",    label:"Moto / Scooter"},
+  {key:"piccola", label:"Auto piccola"},
+  {key:"media",   label:"Auto media"},
+  {key:"grande",  label:"Auto grande / SUV"},
+  {key:"luxury",  label:"Auto luxury"},
+  {key:"van",     label:"Van / Furgone"},
+];
+
+var garagesConfig = {};
+var clientToken = "";
+
+// Leggi slug dall'URL: /prenota/cityparking → slug = cityparking
+function getSlug() {
+  var parts = window.location.pathname.split("/").filter(Boolean);
+  return parts[parts.length - 1] || "";
+}
+
+function buildOre(id) {
+  var s = "<select id='" + id + "-h'><option value=''>--</option>";
+  for (var h = 0; h < 24; h++) { var v = h < 10 ? "0"+h : ""+h; s += "<option value='" + v + "'>" + v + "</option>"; }
+  return s + "</select>";
+}
+
+function buildMin(id) {
+  var s = "<select id='" + id + "-m'><option value=''>--</option>";
+  [0,5,10,15,20,25,30,35,40,45,50,55].forEach(function(m) { var v = m < 10 ? "0"+m : ""+m; s += "<option value='" + v + "'>" + v + "</option>"; });
+  return s + "</select>";
+}
+
+function getTime(id) {
+  var h = document.getElementById(id+"-h"), m = document.getElementById(id+"-m");
+  return (h && m && h.value && m.value) ? h.value+":"+m.value : "";
+}
+
+function buildForm(garages, nomeAzienda) {
+  var garOpts = "<option value=''>— Seleziona garage —</option>";
+  garages.forEach(function(g) {
+    garagesConfig[g.nome] = g;
+    garOpts += "<option value='" + g.nome + "'>" + g.nome + "</option>";
+  });
+  var vOpts = VEICOLI.map(function(v) { return "<option value='" + v.key + "'>" + v.label + "</option>"; }).join("");
+
+  return [
+    "<div class='yp-widget'>",
+    "<div class='yp-tabs'>",
+    "  <div class='yp-tab active' onclick='ypTab(this,\"yp-new\")'>📋 Nuova prenotazione</div>",
+    "  <div class='yp-tab' onclick='ypTab(this,\"yp-cancel\")'>❌ Cancella prenotazione</div>",
+    "</div>",
+
+    "<div id='yp-new' class='yp-panel active'>",
+    "<form id='yp-form' novalidate>",
+    "<div class='yp-field'><label>Garage *</label><select name='garage' id='yp-garage-sel' required>" + garOpts + "</select></div>",
+    "<div class='yp-field'><label>Nome e Cognome *</label><input type='text' name='nome_cognome' required></div>",
+    "<div class='yp-row'>",
+    "  <div class='yp-field'><label>Telefono *</label><input type='tel' name='telefono' required></div>",
+    "  <div class='yp-field'><label>Email</label><input type='email' name='email'></div>",
+    "</div>",
+    "<div class='yp-field'><label>Tipo di veicolo</label><select name='tipo_veicolo' id='yp-veicolo-sel'>" + vOpts + "</select></div>",
+    "<div class='yp-row'>",
+    "  <div class='yp-field'><label>Data di arrivo *</label><input type='date' name='data_arrivo' id='yp-arr-data' required></div>",
+    "  <div class='yp-field'><label>Orario di arrivo *</label><div class='yp-time'>" + buildOre("yp-arr") + buildMin("yp-arr") + "</div></div>",
+    "</div>",
+    "<div class='yp-row'>",
+    "  <div class='yp-field'><label>Data di partenza *</label><input type='date' name='data_partenza' id='yp-par-data' required></div>",
+    "  <div class='yp-field'><label>Orario di partenza *</label><div class='yp-time'>" + buildOre("yp-par") + buildMin("yp-par") + "</div></div>",
+    "</div>",
+    "<div id='yp-preventivo' class='yp-preventivo'>",
+    "  <div class='yp-preventivo-title'>Preventivo stimato</div>",
+    "  <div id='yp-prev-importo' class='yp-preventivo-importo'></div>",
+    "  <div id='yp-prev-dettaglio' class='yp-preventivo-dettaglio'></div>",
+    "  <div class='yp-preventivo-note'>IVA inclusa · Il pagamento avviene direttamente in garage</div>",
+    "</div>",
+    "<div class='yp-field'><label>Note aggiuntive (opzionale)</label><textarea name='note'></textarea></div>",
+    "<button type='submit' id='yp-btn' class='btn-book'>Invia prenotazione</button>",
+    "<div id='yp-err' class='yp-msg yp-err'></div>",
+    "</form>",
+    "</div>",
+
+    "<div id='yp-cancel' class='yp-panel'>",
+    "<form id='yp-cform' novalidate>",
+    "<div class='yp-field'><label>Codice prenotazione *</label>",
+    "<input type='text' id='yp-cancel-code' placeholder='Es. YP-AB3X7K' style='text-transform:uppercase;letter-spacing:2px;font-size:16px;text-align:center'></div>",
+    "<button type='submit' id='yp-cbtn' class='btn-cancel'>Cancella prenotazione</button>",
+    "<div id='yp-cok'  class='yp-msg yp-ok'></div>",
+    "<div id='yp-cerr' class='yp-msg yp-err'></div>",
+    "</form>",
+    "</div>",
+    "</div>",
+  ].join("\n");
+}
+
+function calcolaPreventivo(garage, veicolo, arrivo, partenza) {
+  var g = garagesConfig[garage];
+  if (!g || !g.tariffe) return null;
+  var t = g.tariffe[veicolo];
+  if (!t || (!t.ora && !t.gg)) return null;
+  var diffMs = partenza - arrivo;
+  if (diffMs <= 0) return null;
+  var diffMin = diffMs / 60000;
+  var GIORNATA = 1440;
+  var sogliaGgMin = (g.ore_giornaliero || 4) * 60;
+  var tolOra = parseInt(g.tol_ora) || 15;
+  var tolGg  = parseInt(g.tol_gg)  || 30;
+  var giorni = 0, ore = 0, rim = diffMin;
+  while (rim > 0) {
+    if (rim < sogliaGgMin) {
+      ore += 1; rim -= 60;
+      while (rim > tolOra) { ore++; rim -= 60; }
+      break;
+    } else if (rim <= GIORNATA + tolGg) {
+      giorni++;
+      rim -= GIORNATA;
+      if (rim > tolGg) {
+        var op = 1; var r = rim - 60;
+        while (r > tolOra) { op++; r -= 60; }
+        if (op * 60 >= sogliaGgMin) { giorni++; } else { ore += op; }
+      }
+      break;
+    } else {
+      giorni++;
+      rim -= GIORNATA;
+    }
+  }
+  var totale = (giorni * t.gg) + (ore * t.ora);
+  var parti = [];
+  if (giorni > 0) parti.push(giorni + (giorni===1?" giornata":" giornate") + " x " + t.gg.toFixed(2) + "EUR");
+  if (ore > 0)    parti.push(ore    + (ore===1?" ora":" ore")              + " x " + t.ora.toFixed(2) + "EUR");
+  return { totale: totale, dettaglio: parti.join(" + ") };
+}
+
+function aggiornaPreventivo() {
+  var garage  = document.getElementById("yp-garage-sel")  ? document.getElementById("yp-garage-sel").value  : "";
+  var veicolo = document.getElementById("yp-veicolo-sel") ? document.getElementById("yp-veicolo-sel").value : "";
+  var arrD = document.getElementById("yp-arr-data") ? document.getElementById("yp-arr-data").value : "";
+  var parD = document.getElementById("yp-par-data") ? document.getElementById("yp-par-data").value : "";
+  var arrO = getTime("yp-arr"), parO = getTime("yp-par");
+  var box = document.getElementById("yp-preventivo");
+  if (!box || !garage || !arrD || !arrO || !parD || !parO) { if(box) box.style.display="none"; return; }
+  var arrivo = new Date(arrD+"T"+arrO), partenza = new Date(parD+"T"+parO);
+  if (isNaN(arrivo)||isNaN(partenza)||partenza<=arrivo) { box.style.display="none"; return; }
+  var res = calcolaPreventivo(garage, veicolo, arrivo, partenza);
+  if (!res) { box.style.display="none"; return; }
+  document.getElementById("yp-prev-importo").textContent = res.totale.toFixed(2) + " EUR";
+  document.getElementById("yp-prev-dettaglio").textContent = res.dettaglio;
+  box.style.display = "block";
+}
+
+function mountForm(garages, nomeAzienda, token) {
+  clientToken = token;
+  var container = document.getElementById("form-container");
+  container.innerHTML = buildForm(garages, nomeAzienda);
+  container.style.display = "block";
+  document.getElementById("stato-box").style.display = "none";
+
+  window.ypTab = function(el, panelId) {
+    document.querySelectorAll(".yp-tab").forEach(function(t){t.classList.remove("active");});
+    document.querySelectorAll(".yp-panel").forEach(function(p){p.classList.remove("active");});
+    el.classList.add("active");
+    document.getElementById(panelId).classList.add("active");
+  };
+
+  ["yp-garage-sel","yp-veicolo-sel","yp-arr-data","yp-arr-h","yp-arr-m","yp-par-data","yp-par-h","yp-par-m"].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("change", aggiornaPreventivo);
+  });
+
+  document.getElementById("yp-form").addEventListener("submit", function(e) {
+    e.preventDefault();
+    var form = e.target;
+    var btn = document.getElementById("yp-btn");
+    var arrO = getTime("yp-arr"), parO = getTime("yp-par");
+    var req = ["garage","nome_cognome","telefono","data_arrivo","data_partenza"];
+    var valid = req.every(function(n){return form[n]&&form[n].value.trim();});
+    if (!valid||!arrO||!parO) { showErr("yp-err","Compila tutti i campi obbligatori."); return; }
+    btn.disabled=true; btn.textContent="Invio in corso...";
+    var vKey = form["tipo_veicolo"].value;
+    var vLabel = (VEICOLI.find(function(v){return v.key===vKey;})||{label:vKey}).label;
+    var prevImporto = document.getElementById("yp-prev-importo").textContent || "";
+    var prevDettaglio = document.getElementById("yp-prev-dettaglio").textContent || "";
+    fetch(GAS_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        action:"booking", token:clientToken,
+        garage:          form["garage"].value,
+        nome_cognome:    form["nome_cognome"].value.trim(),
+        telefono:        form["telefono"].value.trim(),
+        email:           form["email"]?form["email"].value.trim():"",
+        tipo_veicolo:    vLabel,
+        data_arrivo:     form["data_arrivo"].value,
+        orario_arrivo:   arrO,
+        data_partenza:   form["data_partenza"].value,
+        orario_partenza: parO,
+        note:            form["note"]?form["note"].value.trim():"",
+        preventivo:      prevImporto,
+      }),
+    })
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if (data.ok) {
+        var arrivo  = form["data_arrivo"].value + " " + arrO;
+        var partenza = form["data_partenza"].value + " " + parO;
+        var conf =
+          "<div style='background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:24px;margin-top:8px'>" +
+          "<div style='font-size:13px;font-weight:700;color:#15803d;letter-spacing:.5px;margin-bottom:8px'>PRENOTAZIONE CONFERMATA</div>" +
+          "<div style='font-size:42px;color:#15803d;margin-bottom:12px'>&#10003;</div>" +
+          "<div style='background:#fff;border-radius:10px;padding:16px;font-size:13px;line-height:2.2;margin-bottom:12px'>" +
+          "<b>Codice:</b> <span style='font-family:monospace;font-size:16px;letter-spacing:3px;color:#4f46e5'>" + data.codice + "</span><br>" +
+          "<b>Garage:</b> " + form["garage"].value + "<br>" +
+          "<b>Cliente:</b> " + form["nome_cognome"].value + "<br>" +
+          "<b>Telefono:</b> " + form["telefono"].value + "<br>" +
+          (form["email"]&&form["email"].value ? "<b>Email:</b> " + form["email"].value + "<br>" : "") +
+          "<b>Veicolo:</b> " + vLabel + "<br>" +
+          "<b>Arrivo:</b> " + arrivo + "<br>" +
+          "<b>Partenza:</b> " + partenza + "<br>" +
+          (prevImporto ? "<b>Preventivo:</b> " + prevImporto + (prevDettaglio ? " (" + prevDettaglio + ")" : "") + "<br>" : "") +
+          "</div>" +
+          "<div style='background:#dcfce7;border-radius:8px;padding:12px;font-size:12px;color:#166534;line-height:1.7'>" +
+          "<b>Conserva il codice " + data.codice + "</b><br>" +
+          "Servira per cancellare la prenotazione se necessario.<br>" +
+          "Il pagamento avviene direttamente in garage." +
+          "</div>" +
+          "</div>";
+        form.style.display="none";
+        var confDiv = document.createElement("div");
+        confDiv.innerHTML = conf;
+        var nuovaBtn = document.createElement("button");
+        nuovaBtn.textContent = "Nuova prenotazione";
+        nuovaBtn.style.cssText = "width:100%;padding:11px;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:12px;background:#4f46e5;color:#fff";
+        nuovaBtn.onclick = function(){
+          form.reset(); form.style.display="block";
+          confDiv.remove(); nuovaBtn.remove();
+          document.getElementById("yp-preventivo").style.display="none";
+        };
+        form.parentNode.insertBefore(confDiv, form.nextSibling);
+        form.parentNode.insertBefore(nuovaBtn, confDiv.nextSibling);
+      } else { showErr("yp-err", data.error||"Errore. Riprova."); }
+    })
+    .catch(function(){showErr("yp-err","Errore di rete. Riprova.");})
+    .finally(function(){btn.disabled=false; btn.textContent="Invia prenotazione";});
+  });
+
+  document.getElementById("yp-cform").addEventListener("submit", function(e) {
+    e.preventDefault();
+    var codice = document.getElementById("yp-cancel-code").value.trim().toUpperCase();
+    var btn = document.getElementById("yp-cbtn");
+    if (!codice) { showCMsg("yp-cerr","Inserisci il codice prenotazione."); return; }
+    btn.disabled=true; btn.textContent="Cancellazione in corso...";
+    fetch(GAS_URL,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"cancel",token:clientToken,codice:codice})})
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(data.ok){showCMsg("yp-cok",data.message);document.getElementById("yp-cancel-code").value="";}
+      else{showCMsg("yp-cerr",data.error||"Prenotazione non trovata.");}
+    })
+    .catch(function(){showCMsg("yp-cerr","Errore di rete. Riprova.");})
+    .finally(function(){btn.disabled=false;btn.textContent="Cancella prenotazione";});
+  });
+}
+
+function showErr(id,text){var el=document.getElementById(id);if(el){el.textContent=text;el.style.display="block";}}
+function showCMsg(id,text){
+  ["yp-cok","yp-cerr"].forEach(function(i){var el=document.getElementById(i);if(el)el.style.display="none";});
+  showErr(id,text);
+}
+
+function showError(msg) {
+  document.getElementById("stato-box").innerHTML =
+    "<div class='icon'>❌</div><div>" + msg + "</div>";
+}
+
+// Init
+var slug = getSlug();
+if (!slug || slug === "prenota") {
+  showError("Pagina non trovata. Controlla il link.");
+} else {
+  fetch(GAS_URL + "?action=getConfigBySlug&slug=" + encodeURIComponent(slug))
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if (data.ok && data.garages && data.garages.length > 0) {
+        document.getElementById("garage-nome").textContent = data.nome_azienda;
+        document.title = data.nome_azienda + " — Prenota";
+        mountForm(data.garages, data.nome_azienda, data.token);
+      } else {
+        showError("Parcheggio non trovato. Controlla il link.");
+      }
+    })
+    .catch(function(){
+      showError("Impossibile caricare la pagina. Riprova tra qualche secondo.");
+    });
+}
+</script>
+</body>
+</html>
