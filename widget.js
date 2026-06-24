@@ -170,28 +170,54 @@
     if (!g || !g.tariffe) return null;
     var t = g.tariffe[veicolo];
     if (!t || (!t.ora && !t.gg)) return null;
-    var diffMs  = partenza - arrivo;
+    var diffMs = partenza - arrivo;
     if (diffMs <= 0) return null;
     var diffMin = diffMs / 60000;
-    var oreGiornaliero = g.ore_giornaliero || 4;
-    var tolOra = g.tol_ora !== undefined ? g.tol_ora : 15;
-    var tolGg  = g.tol_gg  !== undefined ? g.tol_gg  : 20;
+
+    var GIORNATA   = 1440;
+    var sogliaGgMin = (g.ore_giornaliero || 4) * 60;
+    var tolOra     = g.tol_ora !== undefined ? parseInt(g.tol_ora) : 15;
+    var tolGg      = g.tol_gg  !== undefined ? parseInt(g.tol_gg)  : 30;
+
     var giorni = 0;
-    var minutiRimanenti = diffMin;
-    while (minutiRimanenti > (oreGiornaliero * 60 + tolGg)) {
-      giorni++;
-      minutiRimanenti -= oreGiornaliero * 60;
+    var ore    = 0;
+    var rim    = diffMin;
+
+    while (rim > 0) {
+      if (rim < sogliaGgMin) {
+        // Sotto soglia: solo ore, prima ora sempre piena
+        ore += 1; rim -= 60;
+        while (rim > tolOra) { ore++; rim -= 60; }
+        break;
+      } else if (rim <= GIORNATA + tolGg) {
+        // Siamo nell'ultima finestra giornaliera
+        giorni++;
+        rim -= GIORNATA;
+        if (rim > tolGg) {
+          // Supera tolleranza: conta ore residue
+          var oreParz = 1; var r = rim - 60;
+          while (r > tolOra) { oreParz++; r -= 60; }
+          // Se le ore residue raggiungono la soglia → altro giornaliero
+          if (oreParz * 60 >= sogliaGgMin) { giorni++; }
+          else { ore += oreParz; }
+        }
+        // else: dentro tolleranza, niente da aggiungere
+        break;
+      } else {
+        // Scatta una giornata piena (24h)
+        giorni++;
+        rim -= GIORNATA;
+      }
     }
-    if (minutiRimanenti > oreGiornaliero * 60) { giorni++; minutiRimanenti = 0; }
-    var ore = 0;
-    if (minutiRimanenti > 0) { ore = 1; minutiRimanenti -= 60; }
-    while (minutiRimanenti > tolOra) { ore++; minutiRimanenti -= 60; }
+
     var totale = (giorni * t.gg) + (ore * t.ora);
     var parti = [];
     if (giorni > 0) parti.push(giorni + (giorni===1?" giornata":" giornate") + " × " + t.gg.toFixed(2) + "€");
-    if (ore > 0)    parti.push(ore + (ore===1?" ora":" ore") + " × " + t.ora.toFixed(2) + "€");
+    if (ore > 0)    parti.push(ore    + (ore===1?" ora":" ore")              + " × " + t.ora.toFixed(2) + "€");
+    if (parti.length === 0) parti.push("Meno di 1 ora");
     return { totale: totale, dettaglio: parti.join(" + ") };
   }
+
 
   function aggiornaPreventivo() {
     var garage  = document.getElementById("yp-garage-sel")  ? document.getElementById("yp-garage-sel").value  : "";
