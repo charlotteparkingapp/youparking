@@ -92,8 +92,14 @@ var clientToken = "";
 
 // Leggi slug dall'URL: /prenota/cityparking → slug = cityparking
 function getSlug() {
+  // Prova prima il query param ?slug=xxx (GitHub Pages)
+  var params = new URLSearchParams(window.location.search);
+  if (params.get("slug")) return params.get("slug");
+  // Fallback: ultima parte del pathname (dominio custom)
   var parts = window.location.pathname.split("/").filter(Boolean);
-  return parts[parts.length - 1] || "";
+  var last = parts[parts.length - 1] || "";
+  if (last && last !== "prenota.html") return last;
+  return "";
 }
 
 function buildOre(id) {
