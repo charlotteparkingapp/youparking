@@ -472,22 +472,26 @@ var slug = getSlug();
 if (!slug) {
   showError("Pagina non trovata. Controlla il link.");
 } else {
-  // 1. Carica cliente da slug
   sbGet("clienti?slug=eq." + encodeURIComponent(slug) + "&select=*")
   .then(function(rows) {
-    if (!rows || rows.length === 0) { showError("Parcheggio non trovato."); return; }
+    if (!rows || rows.length === 0) {
+      showError("Parcheggio non trovato per slug: " + slug);
+      return Promise.reject("no_cliente");
+    }
     clienteData = rows[0];
     document.getElementById("garage-nome").textContent = clienteData.nome_azienda;
     document.title = clienteData.nome_azienda + " — Prenota";
-    // 2. Carica garages
     return sbGet("garages?token_cliente=eq." + clienteData.token + "&select=*");
   })
   .then(function(garages) {
-    if (!garages || garages.length === 0) { showError("Nessun garage configurato."); return; }
+    if (!garages) return;
+    if (garages.length === 0) { showError("Nessun garage configurato."); return; }
     mountForm(garages);
   })
-  .catch(function(){ showError("Impossibile caricare la pagina. Riprova."); });
+  .catch(function(err){
+    if (err !== "no_cliente") showError("Errore caricamento: " + (err ? err.toString() : "sconosciuto"));
+  });
 }
 </script>
-</body> 
+</body>
 </html>
