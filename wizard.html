@@ -164,7 +164,18 @@ function addGarage() {
     '<div class="garage-card-header"><h4>Garage ' + idx + '</h4><button class="remove-btn" onclick="removeGarage(' + idx + ')">x</button></div>' +
     '<div class="field"><label>Nome del garage *</label><input type="text" class="g-nome" placeholder="Es. Garage Centro"></div>' +
     '<div class="row2">' +
-      '<div class="field"><label>Chat ID Telegram *</label><input type="text" class="g-chatid" placeholder="-1001234567890"></div>' +
+      '<div class="field">
+  <label>Chat ID Telegram *</label>
+  <input type="text" class="g-chatid" placeholder="-1001234567890">
+  <p class="hint" style="line-height:1.6;margin-top:6px">
+    <strong>Come trovarlo:</strong><br>
+    1. Crea un gruppo Telegram per questo garage (es. "Garage Centro - Prenotazioni")<br>
+    2. Aggiungi il tuo bot al gruppo come amministratore<br>
+    3. Manda un messaggio qualsiasi nel gruppo<br>
+    4. Apri questo link nel browser: <strong>https://api.telegram.org/bot<span style="color:#4f46e5">TOKEN</span>/getUpdates</strong> (sostituisci TOKEN con il token del tuo bot)<br>
+    5. Cerca nel risultato il campo <code>"chat"</code> &rarr; <code>"id"</code> — e un numero negativo come <code>-1001234567890</code>
+  </p>
+</div>' +
       '<div class="field"><label>Orario chiusura</label><input type="time" class="g-chiusura"></div>' +
     '</div>' +
     '<div class="section-label">Tariffe (IVA inclusa) ' + tip("regole") + '</div>' +
